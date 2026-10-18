@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>โรงเพาะเห็ด</title>
+<style>
+  :root {
+    --bg: #eef5ea;
+    --card: #ffffff;
+    --edge: #e1eadd;
+    --ink: #14231a;
+    --dim: #5f7266;
+    --green: #2f7d46;
+    --title: #2f8f4e;
+    --link-ok: #2f9e7b;
+    --amber: #a66a00;
+    --red: #c4503a;
+    --track: #d6e2d1;
+    --tile: #edf4ef;
+    --chip: #eceeec;
+    --block: #cec2ab;
+    --cap: #9c6a47;
+    --shelf: #5c7060;
+    --line: #e5ebe2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Segoe UI", "Leelawadee UI", "Noto Sans Thai", Tahoma, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  .page { max-width: 1012px; margin: 0 auto; padding: 8px 12px 28px; }
+
+  /* ---------- header ---------- */
+  header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin: 0 4px 12px;
+  }
+  h1 { margin: 0; font-size: 26px; line-height: 1.15; color: var(--title); font-weight: 700; }
+  .sub { margin: 2px 0 0; font-size: 14px; color: var(--dim); }
+  .link { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 2px; }
+  .link input { width: 154px; }
+  .link-state { font-size: 14px; color: var(--link-ok); }
+  .link-state.warn { color: var(--amber); }
+  .link-state.bad { color: var(--red); }
+
+  /* ---------- controls ---------- */
+  input, button { font: inherit; color: var(--ink); }
+  input {
+    height: 44px; padding: 0 16px; border-radius: 22px;
+    border: 1px solid var(--edge); background: #fff; outline: none;
+  }
+  input[type="number"] { width: 84px; }
+  button {
+    height: 44px; padding: 0 18px; border-radius: 22px; cursor: pointer;
+    border: 1px solid var(--edge); background: #fff; font-weight: 500;
+    transition: background .15s, transform .05s;
+  }
+  button:hover { background: #f3f8f1; }
+  button:active { transform: translateY(1px); }
+  button.primary { background: var(--green); border-color: var(--green); color: #fff; font-weight: 700; padding: 0 20px; }
+  button.primary:hover { background: #378c50; }
+  button.on { background: #e3f1e5; border-color: #b9d8bf; }
+  input:focus-visible, button:focus-visible { outline: 3px solid #8bd17c; outline-offset: 2px; }
+
+  /* ---------- cards ---------- */
+  .card {
+    background: var(--card); border: 1px solid var(--edge);
+    border-radius: 28px; padding: 18px 16px 16px; margin-bottom: 14px;
+    box-shadow: 0 1px 6px rgba(30, 70, 40, .07);
+  }
+  .card h2 { margin: 0; font-size: 17px; font-weight: 700; line-height: 1.3; }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; min-height: 34px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .two .card { margin-bottom: 14px; }
+  .pill {
+    display: inline-block; padding: 3px 12px; border-radius: 14px;
+    background: var(--chip); font-size: 13px; font-weight: 500;
+  }
+  .hint { font-size: 14px; color: var(--dim); }
+
+  /* shelf */
+  #shelf { display: block; width: 377px; max-width: 100%; height: auto; margin: 0 auto; }
+  #shelf .blk { fill: var(--block); }
+  #shelf .cap { fill: var(--cap); }
+  #shelf .bar { fill: var(--shelf); }
+  .mood { margin-top: 2px; font-size: 15px; color: var(--dim); }
+  .mood.ok { color: var(--green); }
+  .mood.warn { color: var(--amber); }
+  .mood.bad { color: var(--red); }
+
+  /* tiles */
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+  .tile { background: var(--tile); border-radius: 22px; padding: 12px 16px 10px; }
+  .tile .lab { font-size: 13.5px; color: var(--dim); }
+  .tile .val { font-size: 44px; font-weight: 800; line-height: 1.15; letter-spacing: .5px; font-variant-numeric: tabular-nums; }
+  .tile .val small { font-size: 17px; font-weight: 400; color: var(--dim); letter-spacing: 0; margin-left: 4px; }
+
+  /* humidity bar */
+  .barwrap { position: relative; height: 16px; margin: 20px 0 30px; }
+  .track { position: absolute; inset: 0; border-radius: 8px; background: var(--track); overflow: hidden; }
+  .fill { height: 100%; width: 0; border-radius: 8px; background: var(--green); transition: width .4s, background .3s; }
+  .fill.warn { background: var(--amber); }
+  .fill.bad { background: var(--red); }
+  .mark { position: absolute; top: -5px; height: 26px; width: 2px; margin-left: -1px; background: #a8333a; }
+  .mark-t { position: absolute; top: 22px; transform: translateX(-50%); font-size: 12px; color: #a8333a; white-space: nowrap; }
+  .barnote { font-size: 15px; color: var(--dim); }
+
+  /* dry timer */
+  .timer { font-size: 44px; font-weight: 800; line-height: 1.15; margin: 14px 0 4px; color: var(--green); font-variant-numeric: tabular-nums; }
+  .timer.warn { color: var(--amber); }
+  .timer.bad { color: var(--red); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip { padding: 4px 12px; border-radius: 15px; background: var(--chip); font-size: 13px; font-weight: 600; }
+
+  /* trend chart */
+  #trend { display: block; width: 100%; height: auto; margin-top: 6px; }
+  .xl { display: flex; justify-content: space-between; font-size: 14px; color: var(--dim); margin-top: 6px; }
+
+  /* log */
+  #log { margin: 4px 0 0; padding-left: 22px; font-size: 14.5px; }
+  #log li { padding: 5px 0 4px 2px; border-bottom: 1px solid var(--line); }
+  #log li:last-child { border-bottom: 0; }
+  .empty { color: var(--dim); font-size: 14px; margin-top: 6px; }
+
+  /* commands */
+  .cmds { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .sent { margin-top: 8px; font-size: 13.5px; color: var(--dim); min-height: 20px; }
+  .sent.bad { color: var(--red); }
+  .foot { margin: 14px 6px 0; font-size: 12.5px; color: var(--dim); }
+
+  @media (max-width: 760px) {
+    .two { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .tiles { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fill { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div>
+      <h1>โรงเพาะเห็ด</h1>
+      <p class="sub">อากาศชื้นพอให้ก้อนเชื้อออกดอกไหม</p>
+    </div>
+    <div class="link">
+      <input id="team" type="text" value="team16" maxlength="6" spellcheck="false" autocomplete="off" aria-label="รหัสทีม">
+      <button id="connect" type="button">ต่อ</button>
+      <span id="linkState" class="link-state" role="status">กำลังเริ่ม...</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="head">
+      <h2>ชั้นวางก้อนเชื้อ</h2>
+      <span id="cropChip" class="pill">-</span>
+    </div>
+    <svg id="shelf" viewBox="0 0 377 128" role="img" aria-label="ชั้นวางก้อนเชื้อเห็ด 2 ชั้น ชั้นละ 6 ก้อน"></svg>
+    <div id="mood" class="mood">รอข้อมูลจากบอร์ด...</div>
+  </section>
+
+  <div class="two">
+    <section class="card">
+      <h2>สภาพในโรงเพาะ</h2>
+      <div class="tiles">
+        <div class="tile"><div class="lab">ความชื้น</div><div class="val"><span id="vRh">--</span><small>%</small></div></div>
+        <div class="tile"><div class="lab">อุณหภูมิ</div><div class="val"><span id="vT">--</span><small>°C</small></div></div>
+        <div class="tile"><div class="lab">แสงแดด</div><div class="val"><span id="vSun">--</span><small>°C</small></div></div>
+      </div>
+      <div class="barwrap">
+        <div class="track"><div id="fill" class="fill"></div></div>
+        <div id="mark" class="mark" style="left:65%"></div>
+        <div id="markT" class="mark-t" style="left:65%">ขั้นต่ำ 65%</div>
+      </div>
+      <div class="barnote">เส้นแดงคือเกณฑ์ความชื้นขั้นต่ำของชนิดเห็ด</div>
+    </section>
+
+    <section class="card">
+      <h2>ช่วงอากาศแห้ง</h2>
+      <div id="dry" class="timer">0:00</div>
+      <div class="hint">เวลานับต่อเนื่องจากข้อมูลบอร์ด</div>
+      <div class="chips">
+        <span class="chip">คำขอจากบอร์ด <b id="cReq">0</b> ครั้ง</span>
+        <span class="chip">ยืนยันพ่นหมอกแล้ว <b id="cAck">0</b> ครั้ง</span>
+        <span class="chip">อัปเดต <span id="cUpd">--:--:--</span></span>
+      </div>
+    </section>
+  </div>
+
+  <div class="two">
+    <section class="card">
+      <div class="head">
+        <h2>แนวโน้มความชื้น</h2>
+        <span class="hint">20 ข้อมูลล่าสุด</span>
+      </div>
+      <svg id="trend" viewBox="0 0 460 84" role="img" aria-label="กราฟความชื้น 20 ค่าล่าสุด"></svg>
+      <div class="xl"><span id="xFirst">--:--</span><span id="xLast">--:--</span></div>
+    </section>
+
+    <section class="card">
+      <div class="head">
+        <h2>สมุดพ่นหมอก</h2>
+        <button id="clearLog" type="button">ล้างสมุด</button>
+      </div>
+      <ol id="log"></ol>
+      <div id="logEmpty" class="empty">ยังไม่มีรายการ</div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>สั่งงานและตั้งค่า</h2>
+    <div class="cmds">
+      <button id="ack" class="primary" type="button">พ่นหมอกแล้ว · ยืนยัน</button>
+      <label for="thi">เกณฑ์ร้อน</label>
+      <input id="thi" type="number" value="32" step="1">
+      <span>°C</span>
+      <button id="setHi" type="button">ส่งค่า t_hi</button>
+      <label for="alertMin">เตือนเมื่อแห้งเกิน</label>
+      <input id="alertMin" type="number" value="30" min="1" max="999" step="1">
+      <span>นาที</span>
+      <button id="notify" type="button">เปิดการแจ้งเตือน</button>
+      <button id="csv" type="button">ดาวน์โหลด CSV</button>
+    </div>
+    <div id="sent" class="sent">ยังไม่ได้ส่งคำสั่ง</div>
+  </section>
+
+  <p class="foot">ข้อมูลส่งผ่าน MQTT สาธารณะ อย่าใส่รหัสผ่านหรือข้อมูลส่วนตัว · ประวัติเก็บในเบราว์เซอร์เครื่องนี้</p>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---- ค่าที่ต้องตรงกับโค้ดบอร์ด ----
+  var BROKER_URL = "wss://broker.hivemq.com:8884/mqtt";  // broker.hivemq.com ตัวเดียวกับบอร์ด (ผ่าน WebSocket)
+  var ROOT = "bento-aiot";
+  var T_HI_MAX = 45;
+  var CROPS = {                                             // ตรงกับ CROPS ในบอร์ด
+    oyster: { th: "เห็ดนางฟ้า", tLo: 18, rhLo: 65 },
+    straw:  { th: "เห็ดฟาง",    tLo: 22, rhLo: 65 },
+    ear:    { th: "เห็ดหูหนู",   tLo: 18, rhLo: 60 }
+  };
+  var WHY = { cold: "โรงหนาว", hot: "โรงร้อน", dry: "อากาศแห้ง", wet: "ชื้นเกิน" };
+  var LEVEL_CLASS = ["ok", "warn", "bad"];
+  var TREND_N = 20, LOG_MAX = 200, ROWS_MAX = 500;
+
+  function $(id) { return document.getElementById(id); }
+  function two(n) { return (n < 10 ? "0" : "") + n; }
+  function hm(ts) { var d = new Date(ts); return two(d.getHours()) + ":" + two(d.getMinutes()); }
+  function hms(ts) { var d = new Date(ts); return hm(ts) + ":" + two(d.getSeconds()); }
+  function stamp(ts) {   // 18/10/2569 18:15:36 (พ.ศ.)
+    var d = new Date(ts);
+    return two(d.getDate()) + "/" + two(d.getMonth() + 1) + "/" + (d.getFullYear() + 543) + " " + hms(ts);
+  }
+
+  // ---- ชั้นวางก้อนเชื้อ (SVG) ----
+  (function buildShelf() {
+    var NS = "http://www.w3.org/2000/svg", svg = $("shelf"), bottoms = [50, 121];
+    function add(tag, attrs) {
+      var el = document.createElementNS(NS, tag);
+      for (var k in attrs) el.setAttribute(k, attrs[k]);
+      svg.appendChild(el);
+    }
+    bottoms.forEach(function (b) {
+      for (var i = 0; i < 6; i++) {
+        var x = 12 + i * 61, y = b - 50;
+        add("rect", { "class": "blk", x: x, y: y, width: 40, height: 50, rx: 9 });
+        add("ellipse", { "class": "cap", cx: x + 9, cy: y + 3, rx: 8, ry: 4.5 });
+      }
+      add("rect", { "class": "bar", x: 0, y: b, width: 377, height: 6, rx: 1 });
+    });
+  })();
+
+  // ---- สถานะ ----
+  var client = null;
+  var team = "";
+  var last = null;                       // event ล่าสุดจากบอร์ด (ไม่เก็บข้ามรีเฟรช)
+  var lastAt = 0, dryBase = 0, dryAt = 0;
+  var rhLo = 65, tLo = 18;
+  var st = { log: [], trend: [], ack: 0, lastMist: 0, rows: [] };   // เก็บใน localStorage
+  var alertsOn = false, alertFired = false, audioCtx = null;
+  var baseTitle = document.title;
+
+  function validTeam(t) {
+    return t.length === 6 && t.slice(0, 4) === "team" && /^[0-9]{2}$/.test(t.slice(4)) && t !== "team00";
+  }
+  function topic(kind) { return ROOT + "/" + team + "/" + kind; }
+
+  function setLink(text, cls) {
+    var el = $("linkState");
+    el.textContent = text;
+    el.className = "link-state" + (cls ? " " + cls : "");
+  }
+  function setSent(text, bad) {
+    var el = $("sent");
+    el.textContent = text;
+    el.className = "sent" + (bad ? " bad" : "");
+  }
+
+  // ---- เก็บ/โหลดประวัติในเบราว์เซอร์ ----
+  function storeKey() { return "mushroom-house:" + team; }
+  function save() {
+    try { localStorage.setItem(storeKey(), JSON.stringify(st)); } catch (x) { /* เก็บไม่ได้ก็ไม่เป็นไร */ }
+  }
+  function load() {
+    st = { log: [], trend: [], ack: 0, lastMist: 0, rows: [] };
+    try {
+      var raw = localStorage.getItem(storeKey());
+      if (!raw) return;
+      var o = JSON.parse(raw);
+      if (Array.isArray(o.log)) st.log = o.log.slice(-LOG_MAX);
+      if (Array.isArray(o.trend)) st.trend = o.trend.slice(-TREND_N);
+      if (Array.isArray(o.rows)) st.rows = o.rows.slice(-ROWS_MAX);
+      st.ack = o.ack | 0;
+      st.lastMist = o.lastMist | 0;
+    } catch (x) { /* ข้อมูลเสีย: เริ่มใหม่ */ }
+  }
+
+  // ---- เชื่อมต่อ broker ----
+  function connect() {
+    var t = $("team").value.trim().toLowerCase();
+    if (!validTeam(t)) {
+      setLink("รหัสทีมต้องเป็น teamNN เช่น team16", "bad");
+      return;
+    }
+    if (typeof mqtt === "undefined") {
+      setLink("โหลดไลบรารี MQTT ไม่ได้: ต้องต่ออินเทอร์เน็ต", "bad");
+      return;
+    }
+    if (client) { client.end(true); client = null; }
+    team = t;
+    last = null; lastAt = 0; dryBase = 0; dryAt = 0; alertFired = false;
+    load();
+    render();
+    setLink("กำลังต่อ " + team + "...", "warn");
+
+    var c = mqtt.connect(BROKER_URL, {
+      clientId: "bento-web-" + team + "-" + Math.random().toString(16).slice(2, 8),
+      keepalive: 60,
+      clean: true,
+      connectTimeout: 10000,
+      reconnectPeriod: 3000
+    });
+    client = c;
+
+    c.on("connect", function () {
+      if (client !== c) return;
+      c.subscribe(topic("event"), function (err) {
+        if (err) setLink("subscribe ไม่สำเร็จ", "bad");
+        else setLink("ต่อแล้ว " + team);
+      });
+    });
+    c.on("reconnect", function () { if (client === c) setLink("หลุด: กำลังต่อใหม่...", "warn"); });
+    c.on("offline", function () { if (client === c) setLink("ออฟไลน์: กำลังต่อใหม่...", "warn"); });
+    c.on("error", function () { if (client === c) setLink("ต่อ broker ไม่ได้", "bad"); });
+    c.on("message", function (tp, payload) {
+      if (client !== c || tp !== topic("event")) return;
+      var e;
+      try { e = JSON.parse(payload.toString()); } catch (x) { return; }
+      handleEvent(e);
+    });
+  }
+
+  // ---- รับ event จากบอร์ด ----
+  function addLog(kind, n, rh, ts) {
+    st.log.push({ ts: ts, kind: kind, n: n, rh: rh });
+    if (st.log.length > LOG_MAX) st.log = st.log.slice(-LOG_MAX);
+  }
+
+  function handleEvent(e) {
+    if (!e || typeof e !== "object") return;
+    var now = Date.now();
+
+    // บอร์ดแจ้งว่ากดปุ่มพ่นหมอกที่ตัวบอร์ด (ต้องเพิ่มโค้ดฝั่งบอร์ด: evt = "ack")
+    if (e.evt === "ack") {
+      st.ack += 1;
+      addLog("ackb", 0, last ? last.rh : 0, now);
+      save(); render();
+      return;
+    }
+    if (typeof e.rh !== "number") return;
+
+    last = e; lastAt = now;
+    var crop = CROPS[e.crop];
+    if (crop) { rhLo = crop.rhLo; tLo = crop.tLo; }
+    dryBase = Math.max(0, e.dry_s | 0);
+    dryAt = now;
+
+    var mist = e.mist_n | 0;
+    if (mist < st.lastMist) st.lastMist = 0;               // บอร์ดรีสตาร์ต
+    if (mist > st.lastMist) { addLog("req", mist, e.rh, now); st.lastMist = mist; }
+
+    st.trend.push({ ts: now, rh: e.rh });
+    if (st.trend.length > TREND_N) st.trend = st.trend.slice(-TREND_N);
+
+    st.rows.push([new Date(now).toISOString(), stamp(now), team, e.crop, e.level, e.alert,
+                  e.temp_c, e.rh, e.sun_c, e.dry_s, e.mist_n]);
+    if (st.rows.length > ROWS_MAX) st.rows = st.rows.slice(-ROWS_MAX);
+
+    save(); render();
+  }
+
+  // ---- วาดหน้าจอ ----
+  function whyText(alert) {
+    return String(alert || "").split("+").map(function (k) { return WHY[k] || k; }).join(" + ");
+  }
+  function isDry() {
+    return !!last && (last.dry_s > 0 || /dry/.test(String(last.alert)));
+  }
+  function dryNow() {
+    if (!last || !isDry()) return 0;
+    var s = dryBase + Math.floor((Date.now() - dryAt) / 1000);
+    return last.level === 0 ? Math.min(s, 5) : s;   // ระดับ 0 = ยังไม่ถึง 5 วินาที
+  }
+  function level() { return last ? Math.max(0, Math.min(2, last.level | 0)) : 0; }
+
+  function renderTimer() {
+    var s = dryNow(), el = $("dry");
+    el.textContent = Math.floor(s / 60) + ":" + two(s % 60);
+    el.className = "timer" + (s > 0 && level() > 0 ? " " + LEVEL_CLASS[level()] : "");
+    checkDryAlert(s);
+  }
+
+  function renderTrend() {
+    var pts = st.trend, svg = $("trend"), L = 8, R = 452, T = 6, B = 78;
+    function y(v) { return (B - Math.max(0, Math.min(100, v)) / 100 * (B - T)).toFixed(1); }
+    var out = '<line x1="0" x2="460" y1="' + T + '" y2="' + T + '" stroke="#e5ebe2"/>' +
+              '<line x1="0" x2="460" y1="' + B + '" y2="' + B + '" stroke="#e5ebe2"/>' +
+              '<line x1="0" x2="460" y1="' + y(rhLo) + '" y2="' + y(rhLo) + '" stroke="#d9a39b" stroke-dasharray="4 3"/>';
+    if (pts.length) {
+      var xs = pts.map(function (p, i) { return pts.length === 1 ? 230 : L + i * (R - L) / (pts.length - 1); });
+      var path = pts.map(function (p, i) { return xs[i].toFixed(1) + "," + y(p.rh); }).join(" ");
+      out += '<polyline points="' + path + '" fill="none" stroke="#3a7d4a" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+      pts.forEach(function (p, i) {
+        if (pts.length <= 3 || i === 0 || i === pts.length - 1) {
+          out += '<circle cx="' + xs[i].toFixed(1) + '" cy="' + y(p.rh) + '" r="2.8" fill="#3a7d4a"/>';
+        }
+      });
+    }
+    svg.innerHTML = out;
+    $("xFirst").textContent = pts.length ? hm(pts[0].ts) : "--:--";
+    $("xLast").textContent = pts.length ? hm(pts[pts.length - 1].ts) : "--:--";
+  }
+
+  function renderLog() {
+    var ol = $("log");
+    ol.textContent = "";
+    st.log.slice().reverse().forEach(function (m) {
+      var what = m.kind === "req" ? "บอร์ดแจ้งคำขอพ่นหมอกครั้งที่ " + m.n
+               : m.kind === "ackb" ? "ยืนยันว่าพ่นหมอกแล้ว (กดที่บอร์ด)"
+               : "ยืนยันว่าพ่นหมอกแล้ว";
+      var li = document.createElement("li");
+      li.textContent = stamp(m.ts) + " · " + what + " · RH " + Math.round(m.rh) + "%";
+      ol.appendChild(li);
+    });
+    $("logEmpty").style.display = st.log.length ? "none" : "";
+  }
+
+  function render() {
+    // เกณฑ์ต่ำสุด
+    $("mark").style.left = rhLo + "%";
+    $("markT").style.left = rhLo + "%";
+    $("markT").textContent = "ขั้นต่ำ " + rhLo + "%";
+
+    var lv = level(), cls = LEVEL_CLASS[lv];
+    if (!last) {
+      $("cropChip").textContent = "-";
+      $("vRh").textContent = "--"; $("vT").textContent = "--"; $("vSun").textContent = "--";
+      $("fill").style.width = "0%";
+      $("fill").className = "fill";
+      $("mood").textContent = "รอข้อมูลจากบอร์ด...";
+      $("mood").className = "mood";
+      $("cUpd").textContent = "--:--:--";
+    } else {
+      var crop = CROPS[last.crop];
+      $("cropChip").textContent = crop ? crop.th : String(last.crop || "-");
+      $("vRh").textContent = Math.round(last.rh);
+      $("vT").textContent = typeof last.temp_c === "number" ? last.temp_c.toFixed(1) : "--";
+      $("vSun").textContent = typeof last.sun_c === "number" ? last.sun_c.toFixed(1) : "--";
+      $("fill").style.width = Math.max(0, Math.min(100, last.rh)) + "%";
+      $("fill").className = "fill" + (lv ? " " + cls : "");
+      $("mood").textContent = lv === 0 ? "ชื้นดี" : (lv === 1 ? "เริ่มแห้ง" : "แห้งเกิน!") + " · " + whyText(last.alert);
+      $("mood").className = "mood " + cls;
+      $("cUpd").textContent = hms(lastAt);
+    }
+    $("cReq").textContent = String(st.lastMist);
+    $("cAck").textContent = String(st.ack);
+    renderTimer();
+    renderTrend();
+    renderLog();
+  }
+
+  // ---- เตือนเมื่อแห้งเกิน N นาที ----
+  function alertMinutes() {
+    var v = parseInt($("alertMin").value, 10);
+    return isFinite(v) && v >= 1 && v <= 999 ? v : 30;
+  }
+  function beepWeb() {
+    if (!audioCtx) return;
+    try {
+      var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "sine"; o.frequency.value = 880; g.gain.value = 0.15;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime + 0.35);
+    } catch (x) { /* ไม่มีเสียงก็ได้ */ }
+  }
+  function checkDryAlert(secs) {
+    if (!alertsOn) return;
+    if (secs === 0) {
+      if (alertFired) { alertFired = false; document.title = baseTitle; }
+      return;
+    }
+    if (!alertFired && secs >= alertMinutes() * 60) {
+      alertFired = true;
+      var msg = "อากาศแห้งติดกัน " + Math.floor(secs / 60) + " นาทีแล้ว";
+      document.title = "⚠ " + msg;
+      beepWeb();
+      try {
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("โรงเพาะเห็ด", { body: msg });
+        }
+      } catch (x) { /* ใช้เสียงกับชื่อแท็บแทน */ }
+    }
+  }
+
+  $("notify").addEventListener("click", function () {
+    var btn = $("notify");
+    if (alertsOn) {
+      alertsOn = false; alertFired = false;
+      document.title = baseTitle;
+      btn.textContent = "เปิดการแจ้งเตือน";
+      btn.classList.remove("on");
+      setSent("ปิดการแจ้งเตือนแล้ว");
+      return;
+    }
+    var min = alertMinutes();
+    $("alertMin").value = min;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    } catch (x) { audioCtx = null; }
+    alertsOn = true;
+    btn.textContent = "ปิดการแจ้งเตือน";
+    btn.classList.add("on");
+
+    function done() {
+      var ok = "Notification" in window && Notification.permission === "granted";
+      setSent("เปิดการแจ้งเตือนแล้ว: เตือนเมื่อแห้งเกิน " + min + " นาที" +
+              (ok ? "" : " (เบราว์เซอร์ไม่อนุญาตป๊อปอัป ใช้เสียงและชื่อแท็บแทน)"));
+    }
+    try {
+      if ("Notification" in window && Notification.permission === "default") {
+        var p = Notification.requestPermission(done);
+        if (p && typeof p.then === "function") p.then(done);
+        return;
+      }
+    } catch (x) { /* ข้ามไปแจ้งตามสถานะที่มี */ }
+    done();
+  });
+
+  // ---- ส่งคำสั่งไปบอร์ด ----
+  function sendCmd(obj, onOk) {
+    var text = JSON.stringify(obj);
+    if (!client || !client.connected) {
+      setSent("ส่งไม่ได้: ยังไม่ได้ต่อ broker", true);
+      return;
+    }
+    client.publish(topic("cmd"), text, { qos: 0 }, function (err) {
+      if (err) { setSent("ส่งไม่สำเร็จ: " + text, true); return; }
+      setSent("ส่งคำสั่งแล้ว: " + text);
+      if (onOk) onOk();
+    });
+  }
+
+  $("connect").addEventListener("click", connect);
+  $("team").addEventListener("keydown", function (ev) { if (ev.key === "Enter") connect(); });
+
+  $("ack").addEventListener("click", function () {
+    sendCmd({ cmd: "ack" }, function () {
+      st.ack += 1;
+      addLog("ack", 0, last ? last.rh : 0, Date.now());
+      save(); render();
+    });
+  });
+
+  $("setHi").addEventListener("click", function () {
+    var raw = $("thi").value.trim(), v = Number(raw);
+    if (raw === "" || !Number.isInteger(v) || v <= tLo || v > T_HI_MAX) {
+      setSent("t_hi ต้องเป็นจำนวนเต็ม " + (tLo + 1) + "-" + T_HI_MAX, true);
+      return;
+    }
+    sendCmd({ cmd: "set", t_hi: v });
+  });
+
+  $("clearLog").addEventListener("click", function () {
+    if (!st.log.length) return;
+    if (!window.confirm("ล้างสมุดพ่นหมอกทั้งหมด?")) return;
+    st.log = [];
+    save(); render();
+  });
+
+  // ---- ดาวน์โหลด CSV ----
+  function csvCell(v) {
+    var s = v === undefined || v === null ? "" : String(v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  $("csv").addEventListener("click", function () {
+    if (!st.rows.length) { setSent("ยังไม่มีข้อมูลให้ดาวน์โหลด", true); return; }
+    var head = ["time_iso", "time_th", "team", "crop", "level", "alert", "temp_c", "rh", "sun_c", "dry_s", "mist_n"];
+    var lines = [head.join(",")].concat(st.rows.map(function (r) { return r.map(csvCell).join(","); }));
+    var blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a"), d = new Date();
+    a.href = URL.createObjectURL(blob);
+    a.download = "mushroom_" + team + "_" + d.getFullYear() + two(d.getMonth() + 1) + two(d.getDate()) +
+                 "_" + two(d.getHours()) + two(d.getMinutes()) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    setSent("ดาวน์โหลด CSV แล้ว " + st.rows.length + " แถว");
+  });
+
+  // ---- นับเวลาแห้งต่อทุกวินาที ----
+  setInterval(renderTimer, 1000);
+
+  render();
+  connect();
+})();
+</script>
+</body>
+</html>
